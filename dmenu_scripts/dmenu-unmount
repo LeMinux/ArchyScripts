@@ -1,0 +1,47 @@
+#!/bin/sh
+
+#Dependencies
+#	dmenu
+#	dunst
+#	systemd-umount added in /etc/sudoers with the NOPASSWD tag
+#Info
+#	script to unmount external drives
+#	systemd-umount is used because I have an udev rules file using systemd-mount
+#	mount points can be added to the black list to avoid unmounting them
+#	/etc/fstab using UUIDs will have consistent mount points
+
+mount_black_list=("/" "/boot")
+
+declare -a devices=()
+
+#awk could be used but then it would require splitting
+#the result. this methods makes comparing to a black list very easy
+while read -r name mm rm size ro type mount; do
+	if [[ ! -z "$mount" ]];then
+		inList=0
+		for i in ${mount_black_list[@]}; do
+			if [[ "$i" == "$mount" ]]; then
+				inList=1
+				break;
+			fi
+		done
+
+		if [[ $inList -eq 0 ]]; then
+			devices+=("${name:2}:$mount\n")
+		fi
+	fi
+done <<<$(lsblk | tail -n +2)
+#use here string to prevent subshell
+
+if [[ -z "${devices[@]}" ]]; then
+	echo -e "" | dmenu -p "Nothing to unmount"
+else
+	selection=$(echo -e "${devices[@]}" | dmenu -i -p "unmount a device")
+	if [[ "$selection" != "" ]]; then
+		if sudo systemd-umount "${selection##*:}"; then
+			notify-send "Safe to remove USB"
+		else
+			notify-send --urgency critical "FAILED TO UNMOUNT!"
+		fi
+	fi
+fi

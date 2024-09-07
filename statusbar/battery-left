@@ -1,0 +1,66 @@
+#!/bin/sh
+
+#Dependencies
+#	bc
+#Info
+#	prints out how much time is left on the battery
+#	If charging it will print out the time remaining until a full battery
+#	If discharging it will print out the time remaining until empty
+#	If Full it prints out FULL
+
+if [[ $# -ne 1 ]]; then
+	echo "Need battery status from sys file"
+	exit 1
+fi
+
+if [[ ! -d "/sys/class/power_supply/BAT0" ]]; then
+	echo "N/A"
+	exit 0
+fi
+
+if [[ "$1" == "Charging" ]]; then
+	charge1=$(cat /sys/class/power_supply/BAT0/energy_now)
+	sleep 2
+	charge2=$(cat /sys/class/power_supply/BAT0/energy_now)
+	full=$(cat /sys/class/power_supply/BAT0/energy_full)
+	rate=$(((charge2 - charge1) / 2))
+	case $rate in
+		-*)
+			echo "NO RATE"
+		;;
+		*)
+			seconds=$(echo "scale=1; ($full - $charge2)/$rate" | bc)
+			seconds="${seconds%%.*}"
+			if [[ $seconds -le 60 ]]; then
+				echo "< 1 min"
+			else
+				minutes=$(($seconds % 3600 / 60))
+				hours=$(($seconds / 3600))
+				#minutes=$((seconds/60))
+				#hours=$((minutes/60))
+				echo "${hours}h ${minutes}m"
+			fi
+		;;
+	esac
+elif [[ ("$1" == "Discharging") || ("$1" == "Not Charging") ]]; then
+	energy=$(cat /sys/class/power_supply/BAT0/energy_now)
+	power=$(cat /sys/class/power_supply/BAT0/power_now)
+
+	#integer division
+	raw=$(echo "scale=5; $energy/$power" | bc)
+	hours="${raw%%.*}"
+	#check if no hours since empty string
+	#messes up pipe into bc
+	if [[ -z "$hours" ]];then
+		hours=0
+	fi
+
+	minutes=$(echo "scale=1; ($raw-$hours)*60" | bc)
+	minutes="${minutes%%.*}"
+	if [[ -z "$minutes" ]];then
+		minutes=0
+	fi
+	echo "${hours}h ${minutes}m"
+else
+	echo "FULL"
+fi

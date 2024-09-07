@@ -1,0 +1,21 @@
+#!/bin/sh
+
+#Dependencies
+#	wire plumber
+#	nerd font
+#Info
+#	prints out if the speaker is muted or not and the volume
+#	the volume is still printed while muted so you can adjust the
+#	volume while muted and then unmute at the desired volume
+
+vol="$(wpctl get-volume @DEFAULT_AUDIO_SINK@)"
+
+if [[ "$vol" == *"MUTED"* ]]; then
+	vol="${vol:8:4}"
+	#speaker with slash
+	echo "󰸈 $vol"
+else
+	vol="${vol:8:4}"
+	#speaker with two waves
+	echo "󰕾 $vol"
+fi

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+#Dependencies:
+#	bc
+#Info:
+#	Obtains the battery health by comparing
+#	full by design to what it can hold at maximum now
+
+if [[ -d /sys/class/power_supply/BAT0/ ]]; then
+	full=$(cat /sys/class/power_supply/BAT0/energy_full)
+	designFull=$(cat /sys/class/power_supply/BAT0/energy_full_design)
+
+	full=$((full * 100))
+
+	health=$(echo "scale=1; $full/$designFull" | bc)
+	printf "%.0f\n" $health
+else
+	echo "No Battery"
+fi

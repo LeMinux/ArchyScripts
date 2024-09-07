@@ -1,0 +1,85 @@
+#!/bin/sh
+
+#Dependencies:
+#	battery-left script
+#	criticalbatteryscript script
+#	lowbatteryscript script
+#	status2d patch
+#	bc
+#	in dwmblocks you will need to increase CMDLENGTH to 100 in the .c file
+#Info:
+#	prints out a battery icon, battery percentage with a state
+#	indicating if it is charging or discharging
+#	and the remaining battery left or remaining time to full battery
+#	with the battery-left script
+#	The battery icon changes color and size as it goes through the percentages
+
+if [[ -d "/sys/class/power_supply/BAT0" ]]; then
+	batPerc=$(cat /sys/class/power_supply/BAT0/capacity)
+	batState=$(cat /sys/class/power_supply/BAT0/status)
+
+	state=""
+	if [[ "$batState" == "Charging" ]]; then
+		state="+"
+	elif [[ "$batState" == "Discharging" ]]; then
+		state="-"
+	elif [[ "$batState" == "Full" ]]; then
+		state="*"
+	elif [[ "$batState" == "Not charging" ]]; then
+		state="X"
+	else
+		state="N/A"
+	fi
+
+	batteryColor=""
+	if [[ "$batPerc" -ge 80 ]]; then #100 - 80
+		batteryColor="^c#32CD32^"
+	elif [[ "$batPerc" -ge 60 ]]; then #79 - 60
+		batteryColor="^c#729E42^"
+	elif [[ "$batPerc" -ge 40 ]]; then #59 - 40
+		batteryColor="^c#808000^"
+	elif [[ "$batPerc" -ge 20 ]]; then #39 - 20
+		batteryColor="^c#C36C2D^"
+		if [[ "$batPerc" -eq 20 ]] && [[ "$state" == "-" ]]; then
+			#sound signal and create temporary persistent file
+			if [[ ! -f "/tmp/LowSigGiven" ]]; then
+				lowbatteryscript
+				touch /tmp/LowSigGiven
+			fi
+		else
+			rm -f /tmp/LowSigGiven
+		fi
+	elif [[ "$batPerc" -ge 10 ]]; then #19-10
+		batteryColor="^c#803020^"
+		if [[ "$batPerc" -eq 10 ]] && [[ "$state" == "-" ]]; then
+			#sound signal and create temporary persistent file
+			if [[ ! -f "/tmp/CriticalSigGiven" ]]; then
+				criticalbatteryscript
+				touch /tmp/CriticalSigGiven
+			fi
+		else
+			rm -f /tmp/CriticalSigGiven
+		fi
+	else #9-0 (below 10)
+		batteryColor="^c#3B1F23^"
+	fi
+
+	maxWidth="25"
+	#maxWidth is subtracted by 4 because the border and the battery cap takes 2 pixels
+	roundedPerc=$(echo "scale=1; $batPerc/10 + 0.5" | bc)
+	roundedPerc="${roundedPerc%%.*}"
+	if [[ -z "$roundedPerc" ]]; then
+		roundedPerc=1
+	fi
+	colorStart=$((($maxWidth - 2) - (2 * $roundedPerc)))
+	colorWidth=$(($maxWidth - 1 - $colorStart))
+	batteryNose="^r0,7,2,4^"
+	batteryBody="^r2,4,$(($maxWidth - 2)),10^"
+	#this creates the border by filling in the previous draw
+	batteryBorder="^c#000000^^r3,5,$(($maxWidth - 4)),8^"
+	batteryColorFill="$batteryColor^r$colorStart,5,$colorWidth,8^"
+	batteryIcon="$batteryNose$batteryBody$batteryBorder$batteryColorFill^d^^f$maxWidth^"
+	echo -e "$batteryIcon $state$batPerc% $(battery-left "$batState")"
+else
+	echo -e "N0B"
+fi

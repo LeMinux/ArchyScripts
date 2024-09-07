@@ -1,0 +1,46 @@
+#!/bin/sh
+
+#Dependencies
+#	light
+#	bc
+#	user is in the video group and light is set to have the NOPASSWD tag in
+#	/etc/sudoers
+#Info
+#	Changes the brightness of the monitor using light.
+#	A value can be set for when more precision is desired which will
+#	increment or decrement by a value of 1.
+#	If you don't want precision you can set it the maximum value
+
+if [[ $# -ne 1 ]]; then
+	echo "Need to only pass if brightness increases or decreases with '+' or '-'"
+	exit 1;
+fi
+
+#device specified by light which can be found with light -L
+light_device="sysfs/backlight/intel_backlight"
+precision_point_positive=100
+precision_point_negative=5
+
+current_brightness=$(light -s $light_device -G)
+
+#remove what is after the decimal point
+#it will not always be .00 at the end due to how the value is calculated
+current_brightness=$(echo "scale=1; $current_brightness + 0.5" | bc)
+current_brightness=${current_brightness%%.*}
+
+if [[ "$1" == "+" ]]; then
+	if [[ $current_brightness -ge $precision_point_positive || $current_brightness -lt $precision_point_negative ]]; then
+		light -s $light_device -A 1
+	else
+		light -s $light_device -A 5
+	fi
+elif [[ "$1" == "-" ]]; then
+	if [[ $current_brightness -le $precision_point_negative || $current_brightness -gt $precision_point_positive ]]; then
+		light -s $light_device -U 1
+	else
+		light -s $light_device -U 5
+	fi
+else
+	echo "Invalid argument passed it should only be '+' or '-'"
+	exit 1
+fi

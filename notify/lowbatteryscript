@@ -1,0 +1,12 @@
+#!/bin/sh
+
+#Dependencies
+#	play
+#	BatteryLow sound files
+#	dunst
+#Info
+#	Plays a random sound clip that starts with BatteryLow,
+#	and shows a display notification
+
+notify-send -u critical "Low Battery" "Plug in soon"
+shuf -ezn 1 $HOME/.local/share/sounds/BatteryLow* | xargs -0 -n1 play

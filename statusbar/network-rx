@@ -1,0 +1,40 @@
+#!/bin/sh
+
+#Dependencies
+#	None
+#Info
+#	prints how many bytes the network is receiving
+
+if [[ $# -ne 1 ]]; then
+	echo "Need interface argument"
+	exit 1
+fi
+
+time="1"
+int="$1"   # network interface
+rxFile="/sys/class/net/$int/statistics/rx_bytes"
+
+if [[ -f "$rxFile" ]]; then
+	rxpkts_old="$(cat $rxFile)" # recv packets
+	sleep $time
+	rxpkts_new="$(cat $rxFile)" # recv packets
+
+	# evaluate expressions for recv bytes
+	rxpkts=$((rxpkts_new - $rxpkts_old))
+
+	#7324784 -> 7.32
+	length=${#rxpkts}
+	unit="B/s"
+	if [[ $length -ge 7 ]]; then
+		unit="Mb/s"
+		rxpkts="${rxpkts:0:1}.${rxpkts:1:3}"
+	elif [[ $length -ge 4 ]]; then
+		unit="Kb/s"
+		rxpkts="${rxpkts:0:1}.${rxpkts:1:3}"
+	fi
+	#Down arrow surrounded by hexagon
+	printf "󰁉 %4.4s $unit" $rxpkts
+else
+	echo "Interface: $int may not exists or not have rx_bytes"
+	exit 1
+fi

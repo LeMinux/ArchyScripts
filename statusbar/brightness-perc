@@ -1,0 +1,21 @@
+#!/bin/sh
+
+#Dependencies
+#	a monitor
+#	nerd font
+#	bc
+#Info
+#	prints out the current brightness of the monitor in a percentage
+
+maxBright=$(cat /sys/class/backlight/intel_backlight/max_brightness)
+curBright=$(cat /sys/class/backlight/intel_backlight/actual_brightness)
+
+#Sometimes dividing max_brightness and actual_brightness can have weird numbers
+#this can lead to numbers like 34.99 or 59.86
+#this is not to say that the way increasing or decreasing is incorrect
+#it's just how the percentage turns out when doing the math
+percentage=$(echo "scale=1; ($curBright*100 / $maxBright) + 0.5" | bc)
+percentage=${percentage%%.*}
+
+#light bulb icon
+printf "󰛨 %3d" $percentage

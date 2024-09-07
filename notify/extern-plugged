@@ -1,0 +1,21 @@
+#!/bin/sh
+
+#Dependencies
+#	dunst
+#	called from udev
+#	.Xauthority set up
+#Info
+#	This script notifies when a USB is plugged in.
+#	In my case this script is called from an udev rule
+#	the Arch Wiki uses this "/usr/bin/su USERNAME_TO_RUN_SCRIPT_AS -c SCRIPT_LOCATION"
+#	but I used sudo -u instead
+#	so it turns into this "/usr/bin/sudo -u USERNAME_TO_RUN_SCRIPT_AS SCRIPT_LOCATION"
+
+user="$(id -u -n)"
+user_id=$(id -u)
+
+export XAUTHORITY="/home/$user/.Xauthority"
+export DISPLAY=:0
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$user_id/bus"
+
+/usr/bin/notify-send "USB plugged in"

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+#Dependencies
+#	play
+#	Charge.wav file
+#	In order for this to play sound from something like acpi
+#	you need to set the XDG_RUNTIME_DIR to /run/user/<your user uid>
+#	and run as your user (su USER or sudo -u USER)
+#Info
+#	Plays a sound file
+
+play $HOME/.local/share/sounds/Charge.wav &

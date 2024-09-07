@@ -1,0 +1,10 @@
+#!/bin/sh
+
+#Dependencies
+#	play
+#	BatteryCritical sound files
+#Info
+#	Plays a random sound clip that starts with BatteryCritical
+
+notify-send -u critical "Critical Battery" "SWEET BABY JESUS I'M GOING TO DIE!"
+shuf -ezn 1 $HOME/.local/share/sounds/BatteryCritical* | xargs -0 -n1 play

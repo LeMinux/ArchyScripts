@@ -1,0 +1,35 @@
+#!/bin/sh
+
+#Dependencies
+#	status2d
+#	caps lock key (or something that sends a caps lock key input)
+#	num lock key (or something that sends a num lock key input)
+#Info
+#	prints out the status of the lock keys except for scroll lock
+#	because I have never used it
+#	red background for lock being inactive
+#	green background for lock being active
+
+#I don't know why this sleep makes it work but it just does
+#it's not like the incorrect thing is echoed
+#it just for what ever reason always displays what is in the if block to the status bar
+sleep 0.2
+capState=$(xset -q | awk -F: 'NR==4 {print $3}')
+numState=$(xset -q | awk -F: 'NR==4 {print $5}')
+
+capPrint=""
+numPrint=""
+
+if ! [[ "$capState" != *"on"* ]]; then
+	capPrint="^b#424F3B^C^d^"
+else
+	capPrint="^b#803020^C^d^"
+fi
+
+if ! [[ "$numState" != *"on"* ]]; then
+	numPrint="^b#424F3B^N^d^"
+else
+	numPrint="^b#803020^N^d^"
+fi
+
+echo -e "Locks: $capPrint $numPrint"

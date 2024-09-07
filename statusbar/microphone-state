@@ -1,0 +1,21 @@
+#!/bin/sh
+
+#Dependencies
+#	wire plumber
+#	nerd font
+#Info
+#	prints out if the microphone is muted or not and the volume
+#	the volume is still printed while muted so you can adjust the
+#	volume while muted and then unmute at the desired volume
+
+stat="$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)"
+
+if [[ "$stat" == *"MUTED"* ]]; then
+	stat="${stat:8:4}"
+	#microphone with slash
+	echo "󰍭 $stat"
+else
+	stat="${stat:8:4}"
+	#microphone icon
+	echo "󰍬 $stat"
+fi

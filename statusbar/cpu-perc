@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#Dependencies
+#	A CPU :P
+#Info
+#	prints out how much of the CPU is being used in a percentage
+
+echo "CPU: $(grep 'cpu ' /proc/stat | awk '{usage=($4)*100/($2+$3+$4+$5+$6+$7+$8+$9+$10+$11)} END {printf "%.2f%", usage}')"
