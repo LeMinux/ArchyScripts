@@ -1,0 +1,51 @@
+#!/bin/sh
+
+#Dependencies
+#	maim
+#	dunst
+#	dmenu
+#Info
+#	Asks the user for the name they want for a screenshot
+#	If the user chooses to not enter a name it will default to
+#	Screenshot-[time and date]
+#	Screenshots are only taken in .png format and will always end in .png
+#	if -s is passed it will then use maim in selection mode
+
+flags="-f png"
+prompt="(Screen) screenshot name:"
+
+if [[ $# -eq 1 ]] && [[ $1 == "-s" ]]; then
+	flags+=" -s"
+	prompt="(Select) screenshot name:"
+elif [[ $# -ne 0 ]]; then
+	echo "The only argument should be -s"
+	exit 1
+fi
+
+name=$(echo -e "" | dmenu -p "$prompt")
+if [[ $? -eq 0 ]]; then
+	if [[ -z "$name" ]]; then
+		name="Screenshot-$(date +%Y_%m_%d-%T).png"
+	else
+		#if ending doesn't contain .png add it
+		#there can be .png some where in the middle though like test.png.txt
+		#which will give test.png.txt.png
+		if [[ "$name" != *".png" ]]; then
+			name+=".png"
+		fi
+
+		confirmation=$(echo -e "No\nYes" | dmenu -i -p "Confirm name \"$name\"?")
+		if [[ "$confirmation" == "No" ]] || [[ -z "$confirmation" ]]; then
+			exit 0
+		fi
+	fi
+
+
+	if maim $flags $HOME/Pictures/Screenshots/$name; then
+		notify-send "Screen shot $name taken"
+	else
+		notify-send "Failed to Screen shot"
+	fi
+else
+	exit 0 #user pressed esc
+fi
